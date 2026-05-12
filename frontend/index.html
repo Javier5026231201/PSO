@@ -3,28 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Mahasiswa</title>
+    <title>Login - StudentSync</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Style khusus untuk halaman login agar berada di tengah */
+        body.login-body {
+            background-color: var(--its-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            border-bottom: 8px solid var(--its-gold);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: var(--its-blue);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .footer-text a {
+            color: var(--its-blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
-<body class="center-layout">
+<body class="login-body">
 
-<div class="card login-card">
-    <h1>Login Mahasiswa</h1>
-    <p class="subtitle">Silakan masuk untuk mengakses dashboard</p>
+    <div class="card login-card">
+        <div class="login-header">
+            <h1>StudentSync</h1>
+            <p>Silakan masuk menggunakan akun Anda</p>
+        </div>
 
-    <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" placeholder="Masukkan username">
+        <div id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Masukkan username" class="its-input">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Masukkan password" class="its-input">
+            </div>
+
+            <button onclick="login()" id="login-btn" class="btn-save">
+                Masuk ke Dashboard
+            </button>
+        </div>
+
+        <div class="footer-text">
+            Belum memiliki akun? <a href="#" onclick="showRegister()">Daftar Sekarang</a>
+        </div>
     </div>
-    
-    <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Masukkan password">
-    </div>
 
-    <button onclick="login()" class="btn-primary">Login</button>
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Fungsi tambahan khusus interaksi di halaman login
+        function showRegister() {
+            const formBox = document.querySelector('.login-card');
+            formBox.innerHTML = `
+                <div class="login-header">
+                    <h1>Daftar Akun</h1>
+                    <p>Buat akun baru untuk akses StudentSync</p>
+                </div>
+                <div class="form-group">
+                    <label>Username / NRP Baru</label>
+                    <input type="text" id="reg-user" placeholder="Buat username" class="its-input">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="reg-pass" placeholder="Buat password" class="its-input">
+                </div>
+                <button onclick="doRegister()" class="btn-save">Registrasi</button>
+                <div class="footer-text">
+                    Sudah punya akun? <a href="#" onclick="location.reload()">Login</a>
+                </div>
+            `;
+        }
+    </script>
 </body>
 </html>

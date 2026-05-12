@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Catatan - Portal ITS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #e6fffa;
+            color: var(--its-green);
+            margin-bottom: 20px;
+            border: 1px solid var(--its-green);
+        }
+
+        .input-hint {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+
+        .editor-container {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        textarea.its-input {
+            border: none;
+            border-radius: 0;
+            resize: vertical;
+            min-height: 300px;
+            padding: 20px;
+            line-height: 1.8;
+        }
+
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-cancel {
+            background: #edf2f7;
+            color: #4a5568;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-cancel:hover {
+            background: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>PORTAL ITS</h2>
+        <a href="dashboard.html" class="nav-link">Dashboard</a>
+        <a href="add-note.html" class="nav-link active">Tambah Notes</a>
+        <a href="add-schedule.html" class="nav-link">Tambah Jadwal</a>
+        <a href="groups.html" class="nav-link">Grup Matkul</a>
+        <a href="#" onclick="logout()" class="nav-link" style="margin-top: 50px; color: var(--its-gold);">Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="form-container">
+            <header class="header">
+                <div>
+                    <h1>Buat Catatan Baru</h1>
+                    <p>Catatan akan otomatis tersimpan berdasarkan waktu dan grup pilihan.</p>
+                </div>
+            </header>
+
+            <div class="card">
+                <span class="status-badge">Auto-Sync Enabled</span>
+                
+                <div class="form-group">
+                    <label for="note-title">Judul Catatan</label>
+                    <input type="text" id="note-title" placeholder="Misal: Resume Pertemuan 1 - Arsitektur Database" class="its-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="note-category">Pilih Group / Mata Kuliah</label>
+                    <select id="note-category" class="its-input">
+                        <option value="PSO">PSO (Pemodelan Sistem Objek)</option>
+                        <option value="Progjar">Progjar (Pemrograman Jaringan)</option>
+                        <option value="Database">Manajemen Database</option>
+                        <option value="Umum">Umum / Lain-lain</option>
+                    </select>
+                    <p class="input-hint">Pilih kategori agar catatan muncul di halaman Grouping.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="note-content">Isi Catatan</label>
+                    <div class="editor-container">
+                        <textarea id="note-content" placeholder="Tuliskan detail catatan Anda di sini..." class="its-input"></textarea>
+                    </div>
+                </div>
+
+                <div class="action-bar">
+                    <button class="btn-cancel" onclick="window.location.href='dashboard.html'">Batal</button>
+                    <button class="btn-save" onclick="saveNote()" style="width: auto; padding: 12px 40px;">
+                        Simpan Catatan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Pastikan user login
+        if (!localStorage.getItem('user_id')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

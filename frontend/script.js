@@ -1,219 +1,171 @@
-const API = "";
+// Konfigurasi Mock Data
+const USE_MOCK = true; 
+const API = 'http://localhost:8080';
 
-// --- AUTHENTICATION LOGIC ---
+// Inisialisasi Database Lokal (Mock) di Browser
+if (!localStorage.getItem('mock_notes')) {
+    const initialData = [
+        { 
+            id: 1, 
+            user_id: 1, 
+            title: "[Kelas] Pemodelan Sistem Objek", 
+            category: "PSO", 
+            content: "Pengenalan materi semester 4.", 
+            date: "2026-05-12T08:00" 
+        },
+        { 
+            id: 2, 
+            user_id: 1, 
+            title: "[Tugas] Implementasi CRUD Go", 
+            category: "Database", 
+            content: "Mengerjakan ETL ke staging area.", 
+            date: "2026-05-13T23:59" 
+        }
+    ];
+    localStorage.setItem('mock_notes', JSON.stringify(initialData));
+}
 
+// --- FUNGSI AUTHENTICATION ---
 async function login() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
 
-    if (!username || !password) {
-        alert("Username dan password tidak boleh kosong!");
+    if (!u || !p) {
+        alert("Username dan Password tidak boleh kosong!");
         return;
     }
 
-    try {
-        // Mengubah status text button saat loading
-        const btn = document.querySelector('button');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = "Memproses...";
-        btn.disabled = true;
-
-        const response = await fetch(`${API}/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Simulasi menyimpan token session
-            localStorage.setItem("isLoggedIn", "true");
-            alert(data.message || "Login berhasil!");
-            window.location.href = "dashboard.html";
-        } else {
-            alert(data.message || "Login gagal, periksa kembali kredensial Anda.");
-        }
-    } catch (error) {
-        console.error("Fetch Error:", error);
-        alert("Gagal terhubung ke server. Pastikan backend Go sudah berjalan.");
-    } finally {
-        const btn = document.querySelector('button');
-        if(btn) {
-            btn.innerHTML = "Login";
-            btn.disabled = false;
+    if (USE_MOCK) {
+        // Simulasi Login Sukses
+        localStorage.setItem('user_id', '1');
+        localStorage.setItem('username', u);
+        window.location.href = 'dashboard.html';
+    } else {
+        try {
+            const res = await fetch(`${API}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                localStorage.setItem('user_id', data.id);
+                localStorage.setItem('username', data.username);
+                window.location.href = 'dashboard.html';
+            } else {
+                alert(data.error || "Login Gagal!");
+            }
+        } catch (err) {
+            alert("Backend tidak merespon. Aktifkan USE_MOCK untuk testing UI.");
         }
     }
 }
 
 function logout() {
-    localStorage.removeItem("isLoggedIn");
-    window.location.href = "index.html";
+    localStorage.clear();
+    window.location.href = 'index.html';
 }
 
-function checkAuth() {
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
-    if (!isLoggedIn) {
-        window.location.href = "index.html";
-    }
-}
+// --- FUNGSI SIMPAN DATA (NOTES & SCHEDULE) ---
+async function saveEntry(type) {
+    const userId = localStorage.getItem('user_id');
+    const titleInput = document.getElementById(type === 'note' ? 'note-title' : 'sch-title');
+    const catInput = document.getElementById(type === 'note' ? 'note-category' : 'sch-category');
+    
+    // Khusus Schedule
+    const timeInput = document.getElementById('sch-time');
+    const roomInput = document.getElementById('sch-room');
+    
+    // Khusus Note
+    const contentInput = document.getElementById('note-content');
 
-// --- NOTES LOGIC ---
-
-async function loadNotes() {
-    const notesDiv = document.getElementById("notes");
-    if (!notesDiv) return;
-
-    try {
-        const response = await fetch(`${API}/notes`);
-        if (!response.ok) throw new Error("Gagal mengambil data catatan");
-        const notes = await response.json();
-
-        if (notes.length === 0) {
-            notesDiv.innerHTML = "<p style='text-align:center; color:#a0aec0;'>Belum ada catatan.</p>";
-            return;
-        }
-
-        // Hindari innerHTML += di dalam loop (Performa lebih baik)
-        const notesHTML = notes.map(note => `
-            <div class="data-item">
-                <h3>${note.title}</h3>
-                <p>${note.content}</p>
-                <button onclick="deleteNote(${note.id})" class="delete-btn">Hapus</button>
-            </div>
-        `).join('');
-
-        notesDiv.innerHTML = notesHTML;
-    } catch (error) {
-        console.error(error);
-        notesDiv.innerHTML = "<p style='color:red;'>Gagal memuat catatan.</p>";
-    }
-}
-
-async function addNote() {
-    const titleInput = document.getElementById("title");
-    const contentInput = document.getElementById("content");
-
-    if (!titleInput.value.trim() || !contentInput.value.trim()) {
-        alert("Judul dan isi catatan wajib diisi!");
+    if (!titleInput.value) {
+        alert("Judul wajib diisi!");
         return;
     }
 
-    try {
-        await fetch(`${API}/notes`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                title: titleInput.value,
-                content: contentInput.value
-            })
-        });
+    const payload = {
+        id: Date.now(),
+        user_id: parseInt(userId),
+        title: type === 'note' ? titleInput.value : `[Jadwal] ${titleInput.value}`,
+        category: catInput.value,
+        content: type === 'note' ? contentInput.value : `Lokasi: ${roomInput.value}`,
+        date: type === 'note' ? new Date().toISOString() : timeInput.value
+    };
 
-        // Kosongkan form setelah submit
-        titleInput.value = "";
-        contentInput.value = "";
+    if (USE_MOCK) {
+        let notes = JSON.parse(localStorage.getItem('mock_notes'));
+        notes.push(payload);
+        localStorage.setItem('mock_notes', JSON.stringify(notes));
+        alert("Berhasil disimpan (Mock Mode)!");
+        window.location.href = 'dashboard.html';
+    } else {
+        try {
+            const res = await fetch(`${API}/notes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                alert("Berhasil disimpan ke Database!");
+                window.location.href = 'dashboard.html';
+            }
+        } catch (err) {
+            alert("Gagal terhubung ke Backend.");
+        }
+    }
+}
+
+// --- FUNGSI RENDER DATA ---
+function renderDashboard() {
+    const userName = localStorage.getItem('username');
+    const uid = localStorage.getItem('user_id');
+    
+    if (!uid) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    document.getElementById('user-name').innerText = userName;
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    });
+
+    const notes = JSON.parse(localStorage.getItem('mock_notes')) || [];
+    const recentContainer = document.getElementById('recent-notes');
+
+    if (recentContainer) {
+        // Tampilkan 3 data terbaru
+        const latest = notes.filter(n => n.user_id == uid).reverse().slice(0, 3);
+        recentContainer.innerHTML = latest.map(n => `
+            <div class="note-box">
+                <small style="color:var(--its-blue); font-weight:bold;">${n.category}</small>
+                <div style="font-weight:600;">${n.title}</div>
+                <div style="font-size:0.75rem; color:#718096;">${new Date(n.date).toLocaleString('id-ID')}</div>
+            </div>
+        `).join('');
+    }
+}
+
+function renderGroups() {
+    const uid = localStorage.getItem('user_id');
+    const notes = JSON.parse(localStorage.getItem('mock_notes')) || [];
+    const categories = ['PSO', 'Progjar', 'Database', 'Umum'];
+
+    categories.forEach(cat => {
+        const container = document.getElementById(`group-${cat}`);
+        const countBadge = document.getElementById(`count-${cat}`);
         
-        loadNotes();
-    } catch(error) {
-        alert("Gagal menambahkan catatan");
-    }
-}
-
-async function deleteNote(id) {
-    if (!confirm("Apakah Anda yakin ingin menghapus catatan ini?")) return;
-
-    try {
-        await fetch(`${API}/notes/${id}`, {
-            method: "DELETE"
-        });
-        loadNotes();
-    } catch(error) {
-        alert("Gagal menghapus catatan");
-    }
-}
-
-// --- SCHEDULES LOGIC ---
-
-async function loadSchedules() {
-    const schedulesDiv = document.getElementById("schedules");
-    if (!schedulesDiv) return;
-
-    try {
-        const response = await fetch(`${API}/schedules`);
-        if (!response.ok) throw new Error("Gagal mengambil data jadwal");
-        const schedules = await response.json();
-
-        if (schedules.length === 0) {
-            schedulesDiv.innerHTML = "<p style='text-align:center; color:#a0aec0;'>Belum ada jadwal.</p>";
-            return;
+        const filtered = notes.filter(n => n.user_id == uid && n.category === cat);
+        
+        if (countBadge) countBadge.innerText = filtered.length;
+        if (container) {
+            container.innerHTML = filtered.length > 0 ? filtered.map(n => `
+                <div class="note-box" style="background: white; border: 1px solid #edf2f7;">
+                    <div style="font-weight:600; font-size:0.9rem;">${n.title}</div>
+                    <small style="color:#a0aec0;">${new Date(n.date).toLocaleDateString('id-ID')}</small>
+                </div>
+            `).join('') : '<p style="color:#cbd5e0; font-size:0.8rem; text-align:center;">Kosong</p>';
         }
-
-        const schedulesHTML = schedules.map(schedule => `
-            <div class="data-item">
-                <h3>${schedule.course}</h3>
-                <p><strong>Hari:</strong> ${schedule.day} | <strong>Jam:</strong> ${schedule.time}</p>
-                <p><strong>Ruang:</strong> ${schedule.room}</p>
-                <button onclick="deleteSchedule(${schedule.id})" class="delete-btn">Hapus</button>
-            </div>
-        `).join('');
-
-        schedulesDiv.innerHTML = schedulesHTML;
-    } catch(error) {
-        console.error(error);
-        schedulesDiv.innerHTML = "<p style='color:red;'>Gagal memuat jadwal.</p>";
-    }
-}
-
-async function addSchedule() {
-    const courseInput = document.getElementById("course");
-    const dayInput = document.getElementById("day");
-    const timeInput = document.getElementById("time");
-    const roomInput = document.getElementById("room");
-
-    if (!courseInput.value.trim() || !dayInput.value.trim()) {
-        alert("Mata kuliah dan hari wajib diisi!");
-        return;
-    }
-
-    try {
-        await fetch(`${API}/schedules`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                course: courseInput.value,
-                day: dayInput.value,
-                time: timeInput.value,
-                room: roomInput.value
-            })
-        });
-
-        // Kosongkan form
-        courseInput.value = "";
-        dayInput.value = "";
-        timeInput.value = "";
-        roomInput.value = "";
-
-        loadSchedules();
-    } catch(error) {
-        alert("Gagal menambahkan jadwal");
-    }
-}
-
-async function deleteSchedule(id) {
-    if (!confirm("Apakah Anda yakin ingin menghapus jadwal ini?")) return;
-
-    try {
-        await fetch(`${API}/schedules/${id}`, {
-            method: "DELETE"
-        });
-        loadSchedules();
-    } catch(error) {
-        alert("Gagal menghapus jadwal");
-    }
+    });
 }

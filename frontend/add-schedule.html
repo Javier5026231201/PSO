@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Jadwal - Portal ITS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .type-option {
+            flex: 1;
+            padding: 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .type-option.selected {
+            background: var(--its-gold);
+            color: var(--its-blue);
+            border-color: var(--its-gold);
+            font-weight: bold;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>PORTAL ITS</h2>
+        <a href="dashboard.html" class="nav-link">Dashboard</a>
+        <a href="add-note.html" class="nav-link">Tambah Notes</a>
+        <a href="add-schedule.html" class="nav-link active">Tambah Jadwal</a>
+        <a href="groups.html" class="nav-link">Grup Matkul</a>
+        <a href="#" onclick="logout()" class="nav-link" style="margin-top: 50px; color: var(--its-gold);">Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="form-container">
+            <header class="header">
+                <h1>📅 Tambah Jadwal Baru</h1>
+                <p>Masukkan agenda kuliah, tugas, atau rapat Anda.</p>
+            </header>
+
+            <div class="card">
+                <label>Tipe Agenda</label>
+                <div class="type-selector" id="type-selector">
+                    <div class="type-option selected" onclick="selectType(this, 'Kelas')">📚 Kelas</div>
+                    <div class="type-option" onclick="selectType(this, 'Tugas')">✍️ Tugas</div>
+                    <div class="type-option" onclick="selectType(this, 'Rapat')">🤝 Rapat</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="sch-title">Nama Kegiatan / Matkul</label>
+                    <input type="text" id="sch-title" placeholder="Contoh: Pemrograman Jaringan" class="its-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="sch-category">Grup Mata Kuliah</label>
+                    <select id="sch-category" class="its-input">
+                        <option value="PSO">PSO (Pemodelan Sistem Objek)</option>
+                        <option value="Progjar">Progjar (Pemrograman Jaringan)</option>
+                        <option value="Database">Manajemen Database</option>
+                        <option value="Umum">Umum / Lainnya</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="sch-time">Waktu & Tanggal</label>
+                        <input type="datetime-local" id="sch-time" class="its-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="sch-room">Ruangan / Lokasi</label>
+                        <input type="text" id="sch-room" placeholder="Gedung IF-101" class="its-input">
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-save" onclick="handleSaveSchedule()">Simpan ke Kalender</button>
+                    <button class="btn-primary" style="background:#edf2f7; color:#4a5568; width: 120px;" onclick="window.location.href='dashboard.html'">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        let currentType = 'Kelas';
+
+        function selectType(el, type) {
+            document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            currentType = type;
+        }
+
+      async function handleSaveSchedule() {
+    const userId = localStorage.getItem('user_id');
+    const title = document.getElementById('sch-title').value;
+    const category = document.getElementById('sch-category').value;
+    const time = document.getElementById('sch-time').value;
+    const room = document.getElementById('sch-room').value;
+
+    if (!title || !time) {
+        alert("Harap isi Nama Kegiatan dan Waktu!");
+        return;
+    }
+
+    const scheduleData = {
+        user_id: parseInt(userId),
+        title: `[${currentType}] ${title}`,
+        category: category,
+        content: `Lokasi: ${room}`,
+        date: time
+    };
+
+    try {
+        const res = await fetch(`${API}/notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(scheduleData)
+        });
+
+        if (res.ok) {
+            alert('Jadwal berhasil ditambahkan!');
+            window.location.href = 'dashboard.html';
+        }
+    } catch (err) {
+        alert('Gagal menyimpan ke server.');
+    }
+}
+    </script>
+</body>
+</html>

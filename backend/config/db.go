@@ -5,32 +5,18 @@ import (
 	"fmt"
 	"log"
 
-	_ "github.com/microsoft/go-mssqldb"
+	_ "github.com/lib/pq"
 )
 
 var DB *sql.DB
 
 func ConnectDB() {
-	// ==========================================
-	// PILIH SALAH SATU CONNECTION STRING DI BAWAH INI
-	// ==========================================
-
-	// OPSI 1: Jika kamu login SSMS menggunakan Windows Authentication (Tanpa password)
-	connString := "server=localhost\\SQLEXPRESS;database=mahasiswa_app;trusted_connection=yes;encrypt=disable"
-
-	// OPSI 2: Jika kamu login SSMS menggunakan SQL Server Authentication (Pakai user 'sa' dan password)
-	// connString := "server=localhost\\SQLEXPRESS;user id=sa;password=PasswordKamu;database=mahasiswa_app;encrypt=disable"
-
-	database, err := sql.Open("sqlserver", connString)
+	// Sesuaikan dengan kredensial lokal Anda, atau environment variable GCP nanti
+	connStr := "host=localhost port=5432 user=postgres password=root dbname=mahasiswa_app sslmode=disable"
+	var err error
+	DB, err = sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal("Gagal membuka koneksi SQL Server:", err)
+		log.Fatal(err)
 	}
-
-	err = database.Ping()
-	if err != nil {
-		log.Fatal("SQL Server tidak merespon:", err)
-	}
-
-	fmt.Println("Database SQL Server Connected")
-	DB = database
+	fmt.Println("Database Connected Successfully")
 }
